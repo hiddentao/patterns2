@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function patterns_install() {
+  drupal_install_schema('patterns');
+}
+
+/**
+* Implementation of hook_schema().
+*/
+function patterns_schema() {
+  $schema['patterns'] = array(
+    'fields' => array(
+      'pid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+      'name' => array('type' => 'varchar', 'length' => 55, 'default' => ''),
+      'status' => array('type' => 'int', 'size' => 'tiny', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'public' => array('type' => 'int', 'size' => 'tiny', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'file' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
+      'updated' => array('type' => 'varchar', 'length' => 10, 'not null' => TRUE, 'default' => '0'),
+      'enabled' => array('type' => 'varchar', 'length' => 10, 'not null' => TRUE, 'default' => '0'),
+      'title' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
+      'description' => array('type' => 'text', 'not null' => TRUE),
+      'pattern' => array('type' => 'text', 'not null' => TRUE)
+    ),
+    'primary key' => array('pid'),
+    'unique keys' => array('name' => array('name'))
+  );
+
+  return $schema;
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function patterns_uninstall() {
+  drupal_uninstall_schema('patterns');
+}

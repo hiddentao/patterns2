@@ -1,0 +1,11 @@
+name = Patterns2
+description = Enables extremely simple adding/removing features to your site with minimal to no configuration. Forked version of original module, hosted at http://github.com/hiddentao/patterns2.
+dependencies[] = token
+core = 6.x
+package = Site Setup
+php = 5.1
+
+version = "6.x-2.x-dev"
+core = "6.x"
+project = "patterns"
+
