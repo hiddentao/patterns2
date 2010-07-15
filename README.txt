@@ -1,0 +1,8 @@
+Patterns2
+=========
+
+An improved version of the Drupal Patterns module.
+
+This incorporates a number of patches submitted to the original module version 6.x-1.x-dev (see http://drupal.org/project/issues/patterns?categories=All) as well as further improvements. The motivation for creating this repository is to track all the new improvements being made to the module via Git (better than tracking through the patches submitted) and to (hopefully!) encourage the original module authors to roll the changes in this fork back into the original module.
+
+Grab the latest source at http://github.com/hiddentao/patterns2
