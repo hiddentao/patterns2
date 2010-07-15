@@ -1,11 +1,7 @@
 <?php
 /**
  * Component for updating filters.
- * @author Ramesh Nair
  */
-
-require_once('_common.php');
-
 
 function filter_patterns($op, $id = null, &$data = null) {
   switch($op) {
@@ -66,7 +62,14 @@ function filter_patterns($op, $id = null, &$data = null) {
     	if ('filter_admin_format_form' == $id) {
         module_load_include('inc', 'filter', 'filter.admin');
         
-        _pattern_component_replace_role_names_with_ids($data);
+        if (!empty($data['roles']) && is_array($data['roles'])) {
+	        $all_roles = array_flip(user_roles());
+	        $role_ids = array();
+	        foreach ($data['roles'] as $role_name) {
+	        	$role_ids[$all_roles[$role_name]] = 1;
+	        }
+	        $data['roles'] = $role_ids;
+        }
 
         if (!empty($data['filters']) && is_array($data['filters'])) {
 	        $filters_all = filter_list_all();
@@ -91,11 +94,20 @@ function filter_patterns($op, $id = null, &$data = null) {
     // roles or filters in the same pattern.
     //
     case 'validate':
-    	
-    	if (TRUE !== ($ret = _pattern_component_validate_role_names($data))) {
-    		return $ret;
-    	}
-    	
+    	// check roles
+      if (!empty($data['roles']) && is_array($data['roles'])) {
+        $role_ids = array_flip(user_roles());
+        $bad_roles = array();
+        foreach ($data['roles'] as $role) {
+          if (!isset($role_ids[$role])) {
+            $bad_roles[] = $role;
+          }
+        }
+        if (!empty($bad_roles)) {
+        	return t('Invalid role names: %roles', array('%roles' => implode(', ',$bad_roles)));
+        }
+      }
+      
       // check filters
       if (!empty($data['filters']) && is_array($data['roles'])) {
       	$filters_all = filter_list_all();
