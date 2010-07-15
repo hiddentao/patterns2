@@ -1,5 +1,7 @@
 <?php
 
+require_once('_common.php');
+
 function node_patterns($op, $id = null, &$data = null, $a = null) {
   switch($op) {
     // Return the valid tags that this component can prepare and process
