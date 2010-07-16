@@ -7,5 +7,4 @@ php = 5.1
 
 version = "6.x-2.x-dev"
 core = "6.x"
-project = "patterns"
 

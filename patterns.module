@@ -1401,6 +1401,13 @@ function patterns_execute_pattern_batch($pattern, $params = array()) {
     return FALSE;
   }
 
+  // lets clear the caches here to ensure that newly added modules  
+  // and future pattern actions work as expected.
+  module_load_include('inc', 'system', 'system.admin');
+  $form = $form_state = array();
+  system_clear_cache_submit($form, $form_state);
+  
+  
   $result = patterns_prepare_actions($actions, $actions_map);
   if (!$result['success']) {
     drupal_set_message($result['error_message'], 'error');
