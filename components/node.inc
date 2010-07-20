@@ -342,13 +342,13 @@ function node_patterns($op, $id = null, &$data = null, $a = null) {
 
       unset($data['update']);
 
-      // Until manual path setting is fixed,
-      // unset all path related elements to prevent
-      // potential database errors.
-      unset($data['path']);
+      if (isset($data['path'])) {
+        $data['pathauto_perform_alias'] = 0;
+      } else {
+        $data['pathauto_perform_alias'] = 1;
+      }
       unset($data['pid']);
       unset($data['old_alias']);
-      unset($data['pathauto_perform_alias']);
 
       return $data;
     break;
