@@ -1162,6 +1162,18 @@ function patterns_load_string_xml($source) {
     $pattern[$values['tag']] = $values;
     unset($pattern[$values['tag']]['tag']);
     unset($pattern[$key]);
+    // ensure the 'modules' array is collapsed - this is necessary to do if, 
+    // for example, we're including multiple sub-patterns which each include 
+    // their own list of modules
+    if ('modules' == $values['tag']) {
+    	if (isset($values['module'])) {
+    		if (is_array($values['module'])) {
+    			$pattern['modules'] = $values['module']; 
+    		} else {
+          $pattern['modules'] = array($values['module']); 
+    		}
+    	}
+    }
   }
 
   if (!patterns_validate_pattern($pattern)) {
