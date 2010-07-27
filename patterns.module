@@ -23,6 +23,9 @@
  * @ In the pattern details, list any sub-patterns directly on the patterns listing page
  */
 
+
+
+
 /**
  * Implementation of hook_perm().
  */
@@ -184,6 +187,8 @@ function patterns_help($section, $arg = NULL) {
   }
   return $output;
 }
+
+
 
 /**
  * Display the pattern settings form
@@ -1372,6 +1377,8 @@ function patterns_execute_config($module) {
 
 function patterns_execute_pattern($pattern, $params = array(), $mode = 'batch') {
 
+  patterns_processing_config_reset();	
+	
   $args = array($pattern, $params);
   $function = 'patterns_execute_pattern_'. $mode;
 
@@ -1552,9 +1559,13 @@ function patterns_batch_actions($action, $place, $actions_map, &$context) {
   $result = patterns_implement_action($action, $context['results']['identifiers'], $place, $actions_map);
 
   if (!$result['success']) {
-    // we use 'results' to keep track of errors and abort execution if required
-    $context['results']['abort'] = TRUE;
-    $context['results']['error_message'] = $result['error_message'];
+  	if (!isset($_SESSION[PATTERNS_IGNORE_FAILED_ACTIONS])) {
+	    // we use 'results' to keep track of errors and abort execution if required
+	    $context['results']['error_message'] .= $result['error_message'];
+	    $context['results']['abort'] = TRUE;
+  	} else {
+  		drupal_set_message('ERROR: ' . $result['error_message'], 'warning');
+  	}
   }
 
   if (timer_read('patterns_action') < 1000) {
@@ -1566,6 +1577,9 @@ function patterns_batch_actions($action, $place, $actions_map, &$context) {
  * Finish a batch operation
  */
 function patterns_batch_finish($success, $results, $operations) {
+	
+  patterns_processing_config_reset(); 
+	
   $info = $_SESSION['patterns_batch_info'];
   if (!isset($results['abort']) || !($results['abort'])) {
     foreach ($info as $key => $i) {
@@ -3206,3 +3220,92 @@ function patterns_debug_batch($var = null) {
   print drupal_to_js(array('status' => 0, 'data' => $var));
   exit;
 }
+
+
+// ----------------------------------------------------------------------- //
+// Patterns config tags
+// ----------------------------------------------------------------------- //
+
+// Patterns configuration directives
+define('PATTERNS_IGNORE_FAILED_ACTIONS','ignore-failed-actions');
+
+function patterns_patterns($op, $id = null, &$data = null) {
+  switch($op) {
+    // Return the valid tags that this component can prepare and process
+    case 'tags':
+      return array('patterns-config');
+    break;
+
+    // Return a list of forms/actions this component can handle
+    case 'actions':
+      return array(
+        'patterns_processing_config_form' => t('Patterns config: Configure the patterns processor'),
+      );
+    break;
+
+    // Return a summary of an action
+    case 'summary':
+      return t('Setting processing flag "%name" to value "%value"', array('%name' => $data['name'], $data['value']));
+    break;
+
+    // Pre validate actions
+    case 'pre-validate':
+      if (!isset($data['name']) || !isset($data['value'])) {
+        return t('Both "name" and "value" are required attributes.');
+      }
+    	if (!in_array($data['name'], array(PATTERNS_IGNORE_FAILED_ACTIONS))) {
+        return t('Unrecognized processing directive: %name', array('%name' => $data['name']));
+      }
+    break;
+
+    // Return the form_id('s) for each action
+    case 'form_id':
+      return 'patterns_processing_config_form';
+      
+    break;
+
+    // Prepare for valid processing of this type of component
+    case 'build':
+    	return $data;
+    break;
+
+    // Build a patterns actions and parameters
+    case 'params':
+      return array();
+    break;
+
+  }
+}
+
+function patterns_processing_config_form($form_state) {
+	$form = array();
+	$form['name'] = array( '#type' => 'textfield' );
+  $form['value'] = array( '#type' => 'textfield' );
+  return $form;
+}
+
+function patterns_processing_config_form_submit($form, &$form_state) {
+  switch ($form_state['values']['name']) {
+  	case PATTERNS_IGNORE_FAILED_ACTIONS:
+  		if (1 == $form_state['values']['value']) {
+  			$_SESSION[PATTERNS_IGNORE_FAILED_ACTIONS] = TRUE;
+  			patterns_processing_config_show_msg(t('%flag turned ON',array('%flag' => PATTERNS_IGNORE_FAILED_ACTIONS)));
+  		} else {
+        unset($_SESSION[PATTERNS_IGNORE_FAILED_ACTIONS]);
+  			patterns_processing_config_show_msg(t('%flag turned OFF',array('%flag' => PATTERNS_IGNORE_FAILED_ACTIONS)));
+  		}
+  		break; 
+  }
+}
+
+function patterns_processing_config_show_msg($msg) {
+	drupal_set_message("PATTERNS CONFIG: $msg", 'warning');
+}
+
+/**
+ * Reset all processing configuration.
+ */
+function patterns_processing_config_reset() {
+	unset($_SESSION[PATTERNS_IGNORE_FAILED_ACTIONS]);
+}
+
