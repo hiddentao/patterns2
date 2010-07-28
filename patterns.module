@@ -1389,8 +1389,6 @@ function patterns_execute_config($module) {
 
 function patterns_execute_pattern($pattern, $params = array(), $mode = 'batch') {
 
-  patterns_processing_config_reset();	
-	
   $args = array($pattern, $params);
   $function = 'patterns_execute_pattern_'. $mode;
 
@@ -1401,8 +1399,72 @@ function patterns_execute_pattern($pattern, $params = array(), $mode = 'batch') 
 
 function patterns_execute_pattern_batch($pattern, $params = array()) {
 
-  set_time_limit(0);
+  $ret = _patterns_execute_pattern_intermediate_steps($pattern, $params);
+  if (!$ret)
+    return FALSE;
+  list ($pattern_details, $actions, $actions_map) = $ret;
+	
+	
+  $batch = array(
+    'title' => t('Processing pattern %pattern', array('%pattern' => $info['title'])),
+    'progress_message' => t('Running action @current out of @total'),
+    'operations' => array(),
+    'finished' => 'patterns_batch_finish'
+  );
 
+  for($i=0;$i<count($actions);$i++) {
+    $batch['operations'][] = array('patterns_batch_actions', array($actions[$i], $i, $actions_map));
+  }
+
+  batch_set($batch);
+  return TRUE;
+}
+
+
+/**
+ * Execute a pattern immediately without using the batch API.
+ * @return TRUE if pattern succeeds; FALSE otherwise. 
+ */
+function patterns_execute_pattern_immediate($pattern, $params = array()) {
+	
+  $ret = _patterns_execute_pattern_intermediate_steps($pattern, $params);
+  if (!$ret)
+    return FALSE;
+  list ($pattern_details, $actions, $actions_map) = $ret;
+
+  $finished = 1;
+  $task_message = '';
+  $context = array(
+    'sandbox' => array(), 
+    'results' => array('abort' => FALSE, 'error_message' => '', 'identifiers' => array()), 
+    'finished' => &$finished, 
+    'message' => &$task_message
+  );
+  
+  // execute actions
+  for($i=0;$i<count($actions) && !$context['results']['abort'];$i++) {
+    patterns_batch_actions($actions[$i],$i,$actions_map,$context);   
+  }
+
+  $success = !$context['results']['abort'];
+  
+  patterns_batch_finish($success, $context['results'], $actions);
+  
+  return $success;
+}
+
+
+/**
+ * Helper to patterns_execute_pattern_batch() and patterns_execute_pattern_immediate().
+ */
+function _patterns_execute_pattern_intermediate_steps(&$pattern, &$params = array()) {
+	
+  set_time_limit(0);
+	
+  patterns_processing_config_reset(); 
+  
+  unset($_SESSION['patterns_batch_info']);
+  
   if (!is_object($pattern)) {
     $pattern = patterns_get_pattern($pattern);
 
@@ -1438,30 +1500,17 @@ function patterns_execute_pattern_batch($pattern, $params = array()) {
   $form = $form_state = array();
   system_clear_cache_submit($form, $form_state);
   
-  
   $result = patterns_prepare_actions($actions, $actions_map);
   if (!$result['success']) {
     drupal_set_message($result['error_message'], 'error');
     return FALSE;
   }
-
-  $batch = array(
-    'title' => t('Processing pattern %pattern', array('%pattern' => $info['title'])),
-//    'init_message' => t('Running action @current out of @total', array('@current' => 1, '@total' => count($actions))),
-    'progress_message' => t('Running action @current out of @total'),
-    'operations' => array(),
-    'finished' => 'patterns_batch_finish'
-  );
-
-  for($i=0;$i<count($actions);$i++) {
-    $batch['operations'][] = array('patterns_batch_actions', array($actions[$i], $i, $actions_map));
-  }
-
+	
   $_SESSION['patterns_batch_info'] = $pattern_details['info'];
-
-  batch_set($batch);
-  return TRUE;
+  
+  return array($pattern_details, $actions, $actions_map);
 }
+
 
 function patterns_install_modules(&$modules) {
   $result = array('success' => TRUE);
