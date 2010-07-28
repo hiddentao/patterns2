@@ -2,7 +2,7 @@
 /**
  * Component for updating Nat-NG configuration.
  * 
- * Tested with Nat-NG 6.x-1.3
+ * Tested with NAT-ng version 6.x-1.3. If using this version of NAT-ng then ensure you have applied the patch from http://drupal.org/node/867434.
  * 
  * @author Ramesh Nair (hiddentao)
  */
