@@ -666,16 +666,28 @@ function patterns_list() {
   // List all patterns
   $rows = array();
   foreach($patterns as $pid => $pattern) {
+  	
+  	$subpattern_only = (isset($pattern->info['subpattern_only']) && 1==$pattern->info['subpattern_only']);
+  	$hidden = (isset($pattern->info['hidden']) && 1 == $pattern->info['hidden']); 
+  	
+  	if ($hidden)
+  	   continue;
+  	
     $actions = array();
-    if (!$pattern->status) {
-      $actions[] =  l(t('Run'), 'admin/build/patterns/enable/'. $pid);
+    
+    // cannot run pattern on its own if it's 'subpattern_only'
+    if (!$subpattern_only) {
+	    if (!$pattern->status) {
+	      $actions[] =  l(t('Run'), 'admin/build/patterns/enable/'. $pid);
+	    }
+	    else if ($pattern->enabled >= $pattern->updated) {
+	      $actions[] =  l(t('Re-Run'), 'admin/build/patterns/enable/'. $pid);
+	    }
+	    else {
+	      $actions[] = l(t('Run Update'), 'admin/build/patterns/enable/'. $pid);
+	    }
     }
-    else if ($pattern->enabled >= $pattern->updated) {
-      $actions[] =  l(t('Re-Run'), 'admin/build/patterns/enable/'. $pid);
-    }
-    else {
-      $actions[] = l(t('Run Update'), 'admin/build/patterns/enable/'. $pid);
-    }
+    
     $actions[] = l(t('Edit'), 'admin/build/patterns/edit/'. $pid);
     if (variable_get('patterns_allow_publish', FALSE)) {
       $actions[] = $pattern->public ? l(t('Unpublish'), 'admin/build/patterns/unpublish/'. $pid) : l(t('Publish'), 'admin/build/patterns/publish/'. $pid);
@@ -684,7 +696,7 @@ function patterns_list() {
 
     $cells = array();
     //      $title = l($pattern->title, 'admin/build/patterns/info/'. $pid, array('attributes' => array('class' => 'pattern-title', 'id' => 'pid-'. $pid)));
-    $title = '<span id="pid-'. $pid .'" class="pattern-title">'. $pattern->title .'</span>';
+    $title = '<span id="pid-'. $pid .'" class="pattern-title">'. $pattern->title . ($subpattern_only ? ' <em>(sub-pattern)</em>' : '') . '</span>';
     //     $view_more = '<div>'. t('Clik on pattern title to see more details.') .'</div>';
     $info = array();
     $info[] = t('Author: ') . $pattern->info['author'];
