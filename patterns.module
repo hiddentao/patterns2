@@ -947,7 +947,7 @@ function patterns_get_patterns($reset = true) {
     $result = db_query('SELECT file FROM {patterns} WHERE status = 1');
 
     while ($pattern = db_fetch_object($result)) {
-      $enabled[] = $result->file;
+      $enabled[] = $pattern->file;
     }
 
     $priority = array();
