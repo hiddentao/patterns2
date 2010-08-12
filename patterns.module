@@ -695,9 +695,7 @@ function patterns_list() {
     $actions = implode('&nbsp;&nbsp;', $actions);
 
     $cells = array();
-    //      $title = l($pattern->title, 'admin/build/patterns/info/'. $pid, array('attributes' => array('class' => 'pattern-title', 'id' => 'pid-'. $pid)));
-    $title = '<span id="pid-'. $pid .'" class="pattern-title">'. $pattern->title . ($subpattern_only ? ' <em>(sub-pattern)</em>' : '') . '</span>';
-    //     $view_more = '<div>'. t('Clik on pattern title to see more details.') .'</div>';
+    $title = '<span id="pid-'. $pid .'" class="pattern-title">'. $pattern->title . ($subpattern_only ? ' <em>(sub-pattern only)</em>' : '') . '</span>';
     $info = array();
     $info[] = t('Author: ') . $pattern->info['author'];
     $info[] = t('Email: ') . $pattern->info['author_email'];
