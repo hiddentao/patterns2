@@ -79,7 +79,16 @@ function menutrails_patterns($op, $id = null, &$data = null) {
           }
 	      }
 	      $tree = menu_tree_all_data($menu_internal_name);
-	      $menu_item = _menutrails_patterns_get_menu_item($tree, $data['menu']['item']);
+	      
+	      if (is_array($data['menu']['item'])) {
+	        $menu_item_name = $data['menu']['item']['value'];
+	        if ('true' == $data['menu']['item']['translate']) {
+            $menu_item_name = t($menu_item_name, array(), language_default('language'));
+	        }
+	      } else {
+	        $menu_item_name = $data['menu']['item'];
+	      }
+	      $menu_item = _menutrails_patterns_get_menu_item($tree, $menu_item_name);
 
 	      // update params
 	      $data['menutrails_node_types'][$type_internal_name] = $menu_item['link']['href'];
@@ -123,9 +132,17 @@ function menutrails_patterns($op, $id = null, &$data = null) {
     	
     	// check menu item
       $tree = menu_tree_all_data($name);
-      $menu_item = _menutrails_patterns_get_menu_item($tree, $data['menu']['item']);
+      if (is_array($data['menu']['item'])) {
+        $menu_item_name = $data['menu']['item']['value'];
+        if ('true' == $data['menu']['item']['translate']) {
+          $menu_item_name = t($menu_item_name, array(), language_default('language'));
+        }
+      } else {
+      	$menu_item_name = $data['menu']['item'];
+      }
+      $menu_item = _menutrails_patterns_get_menu_item($tree, $menu_item_name);
     	if (!$menu_item)
-        return t('Invalid menu item: %item', array('%item' => $data['menu']['item']));
+        return t('Invalid menu item: %item', array('%item' => $menu_item_name));
     	
     break;
 
