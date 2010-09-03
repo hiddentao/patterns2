@@ -127,7 +127,22 @@ function block_patterns($op, $id = null, &$data = null) {
 
     // Validate the values for an action before running the pattern
     case 'validate':
-    	
+
+      // only want to check for cases where we are updating a block
+      if (empty($data['info']) && !empty($data['module']) && !empty($data['delta'])) {
+        $blocks = _block_rehash();
+        $found = FALSE;
+        foreach ($blocks as $b) {
+          if ($b['module'] == $data['module'] && $b['delta'] == $data['delta']) {
+            $found = TRUE;
+            break;
+          }
+        }
+        if (!$found) {
+          return t('Invalid block definition: %module - %delta', array('%module' => $data['module'], '%delta' => $data['delta']));
+        }
+      }
+
       if (TRUE !== ($ret = _pattern_component_validate_format($data))) {
         return $ret;
       }
